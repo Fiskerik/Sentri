@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samla — All your reviews, one tab</title>
+  <meta name="description" content="Samla pulls your Google, Reco.se, Facebook and Trustpilot reviews into one dashboard. AI-drafted replies in Swedish and English. From 199 SEK/month.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <style>
+    /* ── Reset & base ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:   #F7F3EC;
+      --cream2:  #EDE8DF;
+      --ink:     #0D1E0F;
+      --ink2:    #2A3D2B;
+      --green:   #1A7A3C;
+      --green-l: #D4EAD9;
+      --mint:    #E8F5EC;
+      --gold:    #D4930A;
+      --gold-l:  #FEF3CD;
+      --red:     #C0392B;
+      --red-l:   #FDECEC;
+      --muted:   #6B7E6C;
+      --border:  #D6D0C7;
+      --ff-head: 'Fraunces', Georgia, serif;
+      --ff-body: 'DM Sans', sans-serif;
+      --r:       10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--ff-body);
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ── Animations ───────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.04); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-8px); }
+    }
+
+    .anim-0 { animation: fadeUp .6s ease both; }
+    .anim-1 { animation: fadeUp .6s .1s ease both; }
+    .anim-2 { animation: fadeUp .6s .2s ease both; }
+    .anim-3 { animation: fadeUp .6s .3s ease both; }
+    .anim-4 { animation: fadeUp .6s .4s ease both; }
+
+    /* ── Nav ──────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(247,243,236,.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .logo {
+      font-family: var(--ff-head);
+      font-size: 22px; font-weight: 600;
+      letter-spacing: -.5px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .nav-cta {
+      background: var(--ink); color: var(--cream);
+      font-family: var(--ff-body); font-size: 13px; font-weight: 500;
+      padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+    .nav-cta:hover { background: var(--ink2); transform: translateY(-1px); }
+
+    /* ── Hero ─────────────────────────────────────── */
+    .hero {
+      max-width: 1100px; margin: 0 auto;
+      padding: 80px 24px 64px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; gap: 48px; padding: 56px 24px 48px; }
+      .hero-visual { order: -1; }
+    }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--mint); border: 1px solid #B8DCBF;
+      color: var(--green); font-size: 12px; font-weight: 500;
+      padding: 5px 12px; border-radius: 20px; margin-bottom: 20px;
+    }
+    .eyebrow-dot {
+      width: 6px; height: 6px; background: var(--green);
+      border-radius: 50%;
+    }
+
+    h1 {
+      font-family: var(--ff-head);
+      font-size: clamp(36px, 5vw, 54px);
+      font-weight: 500;
+      line-height: 1.08;
+      letter-spacing: -1.5px;
+      color: var(--ink);
+      margin-bottom: 20px;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--green);
+    }
+
+    .hero-sub {
+      font-size: 17px; font-weight: 300; color: var(--muted);
+      line-height: 1.65; margin-bottom: 36px; max-width: 420px;
+    }
+
+    /* Email form */
+    .form-wrap {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 4px 4px 4px 16px;
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.05);
+      transition: box-shadow .2s;
+    }
+    .form-wrap:focus-within {
+      box-shadow: 0 0 0 3px rgba(26,122,60,.15);
+      border-color: var(--green);
+    }
+    .form-wrap input {
+      flex: 1; border: none; outline: none; background: transparent;
+      font-family: var(--ff-body); font-size: 14px; color: var(--ink);
+      min-width: 0;
+    }
+    .form-wrap input::placeholder { color: #B0B8B0; }
+    .form-btn {
+      background: var(--green); color: white;
+      font-family: var(--ff-body); font-size: 13px; font-weight: 500;
+      padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer;
+      white-space: nowrap; transition: background .15s, transform .1s;
+      flex-shrink: 0;
+    }
+    .form-btn:hover { background: #166832; transform: translateY(-1px); }
+    .form-btn:disabled { opacity: .6; cursor: default; transform: none; }
+
+    .form-hint {
+      font-size: 12px; color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .form-hint svg { flex-shrink: 0; }
+
+    .form-success {
+      display: none;
+      background: var(--mint); border: 1px solid #B8DCBF;
+      border-radius: var(--r); padding: 14px 18px;
+      font-size: 14px; color: var(--green); font-weight: 500;
+    }
+    .form-error {
+      display: none;
+      background: var(--red-l); border: 1px solid #F1C0BB;
+      border-radius: var(--r); padding: 12px 16px;
+      font-size: 13px; color: var(--red); margin-top: 10px;
+    }
+
+    /* Social proof */
+    .social-proof {
+      margin-top: 24px; display: flex; align-items: center; gap: 12px;
+    }
+    .avatars { display: flex; }
+    .avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid var(--cream);
+      background: var(--green-l);
+      margin-left: -8px; font-size: 10px; font-weight: 500;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--green);
+    }
+    .avatars .avatar:first-child { margin-left: 0; }
+    .proof-text { font-size: 12px; color: var(--muted); }
+    .proof-text strong { color: var(--ink); font-weight: 500; }
+
+    /* ── Dashboard mockup ─────────────────────────── */
+    .hero-visual {
+      animation: float 5s ease-in-out infinite;
+    }
+    .mockup-shell {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(13,30,15,.12), 0 4px 16px rgba(13,30,15,.06);
+      overflow: hidden;
+    }
+    .mockup-titlebar {
+      background: #F2EEE7;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tb-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .mockup-body { padding: 0; }
+
+    /* Mockup header */
+    .mk-header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .mk-title {
+      font-family: var(--ff-head); font-size: 15px; font-weight: 600; color: var(--ink);
+    }
+    .mk-badge {
+      background: var(--mint); color: var(--green);
+      font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 10px;
+    }
+
+    /* Platform tabs */
+    .mk-tabs {
+      display: flex; gap: 0;
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      overflow-x: auto;
+    }
+    .mk-tab {
+      font-size: 11px; font-weight: 500; color: var(--muted);
+      padding: 8px 12px; border-bottom: 2px solid transparent;
+      white-space: nowrap; cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .mk-tab.active {
+      color: var(--ink); border-bottom-color: var(--ink);
+    }
+    .mk-tab-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+    }
+
+    /* Review rows */
+    .mk-reviews { padding: 8px 0; }
+    .mk-review {
+      padding: 10px 16px;
+      border-bottom: 1px solid #F0EBE3;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .mk-review:last-child { border-bottom: none; }
+    .mk-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      flex-shrink: 0; font-size: 11px; font-weight: 500;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mk-rev-body { flex: 1; min-width: 0; }
+    .mk-rev-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 3px;
+    }
+    .mk-rev-name { font-size: 11px; font-weight: 500; color: var(--ink); }
+    .mk-stars { font-size: 10px; letter-spacing: 1px; }
+    .mk-rev-text { font-size: 10px; color: var(--muted); line-height: 1.4; }
+    .mk-reply-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 5px; font-size: 9px; font-weight: 500;
+      padding: 2px 7px; border-radius: 8px;
+      cursor: pointer;
+    }
+    .mk-reply-chip.ai {
+      background: #EEF2FF; color: #4F46E5;
+    }
+    .mk-reply-chip.done {
+      background: var(--mint); color: var(--green);
+    }
+
+    /* Digest preview strip */
+    .mk-digest {
+      background: #FAFAF8;
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .mk-digest-label { font-size: 10px; color: var(--muted); font-weight: 500; }
+    .mk-digest-stats { display: flex; gap: 12px; }
+    .mk-stat { text-align: center; }
+    .mk-stat-num { font-size: 14px; font-weight: 600; color: var(--ink); display: block; }
+    .mk-stat-lbl { font-size: 9px; color: var(--muted); }
+
+    /* ── Platforms strip ──────────────────────────── */
+    .platforms {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: white;
+      padding: 20px 24px;
+    }
+    .platforms-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; flex-wrap: wrap;
+    }
+    .plat-label {
+      font-size: 12px; color: var(--muted); margin-right: 8px; font-weight: 300;
+    }
+    .plat-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 14px;
+      font-size: 12px; font-weight: 500; color: var(--ink2);
+      transition: border-color .15s, transform .1s;
+    }
+    .plat-pill:hover { border-color: var(--green); transform: translateY(-1px); }
+    .plat-icon {
+      width: 16px; height: 16px; border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: white;
+      flex-shrink: 0;
+    }
+
+    /* ── Features ─────────────────────────────────── */
+    .features {
+      max-width: 1100px; margin: 0 auto;
+      padding: 80px 24px;
+    }
+    .section-label {
+      font-size: 12px; font-weight: 500; color: var(--green);
+      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: var(--ff-head);
+      font-size: clamp(28px, 3.5vw, 40px); font-weight: 500;
+      letter-spacing: -1px; line-height: 1.1; margin-bottom: 48px;
+      max-width: 500px;
+    }
+    .feature-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    }
+    @media (max-width: 760px) { .feature-grid { grid-template-columns: 1fr; } }
+
+    .feat-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .feat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(13,30,15,.08);
+    }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; font-size: 20px;
+    }
+    .feat-title {
+      font-family: var(--ff-head); font-size: 18px; font-weight: 500;
+      letter-spacing: -.4px; margin-bottom: 10px;
+    }
+    .feat-body { font-size: 14px; font-weight: 300; color: var(--muted); line-height: 1.65; }
+
+    /* ── How it works ─────────────────────────────── */
+    .how {
+      background: var(--ink); color: var(--cream);
+      padding: 80px 24px;
+    }
+    .how-inner {
+      max-width: 1100px; margin: 0 auto;
+    }
+    .how .section-label { color: #7DC98D; }
+    .how .section-title { color: var(--cream); }
+    .steps {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+      counter-reset: step;
+    }
+    @media (max-width: 700px) { .steps { grid-template-columns: 1fr; } }
+    .step-card { counter-increment: step; position: relative; }
+    .step-num {
+      font-family: var(--ff-head); font-size: 60px; font-weight: 300;
+      color: rgba(255,255,255,.1); line-height: 1;
+      margin-bottom: 12px;
+    }
+    .step-title {
+      font-family: var(--ff-head); font-size: 20px; font-weight: 500;
+      margin-bottom: 10px; color: var(--cream);
+    }
+    .step-body { font-size: 14px; color: rgba(247,243,236,.55); font-weight: 300; line-height: 1.65; }
+
+    /* ── Pricing ──────────────────────────────────── */
+    .pricing {
+      max-width: 1100px; margin: 0 auto;
+      padding: 80px 24px;
+    }
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px;
+    }
+    @media (max-width: 700px) { .pricing-grid { grid-template-columns: 1fr; } }
+
+    .price-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px;
+    }
+    .price-card.featured {
+      background: var(--ink); color: var(--cream);
+      border-color: var(--ink);
+    }
+    .price-tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; margin-bottom: 16px; }
+    .price-tag.free { background: var(--cream2); color: var(--muted); }
+    .price-tag.popular { background: var(--green); color: white; }
+    .price-tag.growth { background: var(--gold-l); color: var(--gold); }
+    .price-name { font-family: var(--ff-head); font-size: 22px; font-weight: 500; margin-bottom: 4px; }
+    .price-amount {
+      font-size: 36px; font-weight: 300; letter-spacing: -1px;
+      margin-bottom: 4px;
+    }
+    .price-period { font-size: 13px; opacity: .5; margin-bottom: 20px; }
+    .price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .price-features li {
+      font-size: 13px; display: flex; align-items: flex-start; gap: 8px; opacity: .8;
+    }
+    .price-features li::before {
+      content: '✓'; font-size: 11px; font-weight: 700;
+      color: var(--green); flex-shrink: 0; margin-top: 2px;
+    }
+    .price-card.featured .price-features li::before { color: #7DC98D; }
+    .price-features li.muted::before { content: '–'; color: var(--muted); }
+    .price-cta {
+      display: block; width: 100%; margin-top: 24px;
+      padding: 11px; border-radius: 8px; border: 1.5px solid var(--border);
+      font-family: var(--ff-body); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all .15s; background: transparent;
+      color: var(--ink); text-align: center;
+    }
+    .price-cta:hover { background: var(--cream2); }
+    .price-card.featured .price-cta {
+      background: var(--green); color: white; border-color: var(--green);
+    }
+    .price-card.featured .price-cta:hover { background: #166832; }
+
+    /* ── Bottom CTA ───────────────────────────────── */
+    .bottom-cta {
+      background: var(--mint);
+      border-top: 1px solid #C0DCCA;
+      border-bottom: 1px solid #C0DCCA;
+      padding: 80px 24px;
+      text-align: center;
+    }
+    .bottom-cta h2 {
+      font-family: var(--ff-head); font-size: clamp(28px, 4vw, 44px);
+      font-weight: 500; letter-spacing: -1px;
+      margin-bottom: 14px;
+    }
+    .bottom-cta p { font-size: 16px; font-weight: 300; color: var(--muted); margin-bottom: 32px; }
+    .bottom-form {
+      display: flex; gap: 8px; max-width: 440px; margin: 0 auto;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .bottom-form input {
+      flex: 1; min-width: 200px;
+      padding: 11px 16px; border: 1px solid var(--border);
+      border-radius: 8px; font-family: var(--ff-body); font-size: 14px;
+      background: white; outline: none;
+    }
+    .bottom-form input:focus { border-color: var(--green); }
+    .bottom-form button {
+      background: var(--ink); color: white;
+      padding: 11px 22px; border-radius: 8px; border: none;
+      font-family: var(--ff-body); font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: background .15s;
+      white-space: nowrap;
+    }
+    .bottom-form button:hover { background: var(--ink2); }
+    .bottom-form button:disabled { opacity: .5; cursor: default; }
+
+    /* ── Footer ───────────────────────────────────── */
+    footer {
+      max-width: 1100px; margin: 0 auto;
+      padding: 32px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-logo {
+      font-family: var(--ff-head); font-size: 18px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 13px; color: var(--muted); }
+    .footer-links a:hover { color: var(--ink); }
+    .footer-copy { font-size: 12px; color: var(--muted); width: 100%; }
+
+    /* ── Toast ────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--ink); color: white; font-size: 14px;
+      padding: 12px 20px; border-radius: 8px;
+      opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1);
+      z-index: 999; pointer-events: none; white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Misc helpers ─────────────────────────────── */
+    .divider { width: 40px; height: 2px; background: var(--border); margin: 0 8px; }
+
+    /* GDPR badge */
+    .gdpr-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--muted); margin-top: 6px;
+    }
+    .gdpr-badge svg { opacity: .6; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══════════════════════════════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      Samla
+    </div>
+    <button class="nav-cta" onclick="document.getElementById('hero-email').focus(); document.getElementById('hero-email').scrollIntoView({behavior:'smooth', block:'center'})">
+      Get early access
+    </button>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══════════════════════════════════════════ -->
+<section style="max-width:1100px;margin:0 auto;padding:0 24px;">
+  <div class="hero" style="padding-left:0;padding-right:0;">
+
+    <!-- Left: copy + form -->
+    <div>
+      <div class="eyebrow anim-0">
+        <div class="eyebrow-dot"></div>
+        Now in private beta — Sweden & beyond
+      </div>
+
+      <h1 class="anim-1">
+        All your reviews.<br>
+        <em>One tab.</em>
+      </h1>
+
+      <p class="hero-sub anim-2">
+        Google, Reco.se, Facebook and Trustpilot — pulled into one clean dashboard. AI-drafted replies in Swedish and English. A Monday morning digest so you never miss a thing.
+      </p>
+
+      <!-- Form -->
+      <div class="anim-3">
+        <div class="form-wrap" id="hero-form-wrap">
+          <input
+            type="email"
+            id="hero-email"
+            placeholder="din@epost.se"
+            autocomplete="email"
+          />
+          <button class="form-btn" id="hero-btn" onclick="handleSignup('hero')">
+            Join the waitlist →
+          </button>
+        </div>
+        <div class="form-hint">
+          <svg width="12" height="12" fill="none" viewBox="0 0 12 12"><path d="M6 1a5 5 0 100 10A5 5 0 006 1zm-.5 2.5a.5.5 0 011 0v3a.5.5 0 01-1 0v-3zm.5 5.25a.75.75 0 110-1.5.75.75 0 010 1.5z" fill="currentColor" opacity=".4"/></svg>
+          No credit card. Free 14-day trial when we launch.
+        </div>
+        <div class="gdpr-badge">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="5" width="9" height="6.5" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3.5 5V3.5a2.5 2.5 0 015 0V5" stroke="currentColor" stroke-width="1"/></svg>
+          GDPR-compliant · EU servers · No spam, ever
+        </div>
+        <div class="form-success" id="hero-success">
+          ✓ You're on the list! We'll email you when we launch.
+        </div>
+        <div class="form-error" id="hero-error"></div>
+      </div>
+
+      <!-- Social proof -->
+      <div class="social-proof anim-4">
+        <div class="avatars">
+          <div class="avatar">SA</div>
+          <div class="avatar">MK</div>
+          <div class="avatar">LB</div>
+          <div class="avatar">+</div>
+        </div>
+        <span class="proof-text"><strong>47 business owners</strong> already on the waitlist</span>
+      </div>
+    </div>
+
+    <!-- Right: dashboard mockup -->
+    <div class="hero-visual anim-4">
+      <div class="mockup-shell">
+        <div class="mockup-titlebar">
+          <div class="tb-dot" style="background:#FF5F57"></div>
+          <div class="tb-dot" style="background:#FFBD2E"></div>
+          <div class="tb-dot" style="background:#28C840"></div>
+        </div>
+        <div class="mockup-body">
+
+          <div class="mk-header">
+            <div class="mk-title">Café Lindqvist</div>
+            <div class="mk-badge">12 new this week</div>
+          </div>
+
+          <!-- Platform tabs -->
+          <div class="mk-tabs">
+            <div class="mk-tab active">
+              <div class="mk-tab-dot" style="background:#4285F4"></div> All
+            </div>
+            <div class="mk-tab">
+              <div class="mk-tab-dot" style="background:#4285F4"></div> Google
+            </div>
+            <div class="mk-tab">
+              <div class="mk-tab-dot" style="background:#FF6B00"></div> Reco.se
+            </div>
+            <div class="mk-tab">
+              <div class="mk-tab-dot" style="background:#1877F2"></div> Facebook
+            </div>
+            <div class="mk-tab">
+              <div class="mk-tab-dot" style="background:#00B67A"></div> Trustpilot
+            </div>
+          </div>
+
+          <!-- Reviews -->
+          <div class="mk-reviews">
+            <div class="mk-review">
+              <div class="mk-avatar" style="background:#D4EAD9;color:#1A7A3C;">EL</div>
+              <div class="mk-rev-body">
+                <div class="mk-rev-top">
+                  <span class="mk-rev-name">Emma Larsson</span>
+                  <span class="mk-stars" style="color:#F59E0B">★★★★★</span>
+                </div>
+                <div class="mk-rev-text">Bästa fika i hela stan. Kommer definitivt tillbaka! Personalen var så trevlig...</div>
+                <span class="mk-reply-chip done">✓ Replied</span>
+              </div>
+            </div>
+            <div class="mk-review" style="background:#FFF9F9;">
+              <div class="mk-avatar" style="background:#FDE8E8;color:#C0392B;">JH</div>
+              <div class="mk-rev-body">
+                <div class="mk-rev-top">
+                  <span class="mk-rev-name">Jonas Holm</span>
+                  <span class="mk-stars" style="color:#F59E0B">★★☆☆☆</span>
+                </div>
+                <div class="mk-rev-text">Väntade 25 minuter på kaffe. Dyr med tanke på servicen...</div>
+                <span class="mk-reply-chip ai">✦ Draft AI reply</span>
+              </div>
+            </div>
+            <div class="mk-review">
+              <div class="mk-avatar" style="background:#EEF2FF;color:#4F46E5;">AS</div>
+              <div class="mk-rev-body">
+                <div class="mk-rev-top">
+                  <span class="mk-rev-name">Anna Svensson</span>
+                  <span class="mk-stars" style="color:#F59E0B">★★★★☆</span>
+                </div>
+                <div class="mk-rev-text">Mysig atmosfär och god mat. Lite svårt att hitta parkering...</div>
+                <span class="mk-reply-chip ai">✦ Draft AI reply</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats strip -->
+          <div class="mk-digest">
+            <span class="mk-digest-label">This week</span>
+            <div class="mk-digest-stats">
+              <div class="mk-stat">
+                <span class="mk-stat-num">4.3</span>
+                <span class="mk-stat-lbl">avg stars</span>
+              </div>
+              <div class="mk-stat">
+                <span class="mk-stat-num">12</span>
+                <span class="mk-stat-lbl">new reviews</span>
+              </div>
+              <div class="mk-stat">
+                <span class="mk-stat-num" style="color:#C0392B">2</span>
+                <span class="mk-stat-lbl">need reply</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ PLATFORMS ══════════════════════════════════════ -->
+<div class="platforms">
+  <div class="platforms-inner">
+    <span class="plat-label">Works with</span>
+    <div class="plat-pill">
+      <div class="plat-icon" style="background:#4285F4">G</div>
+      Google Reviews
+    </div>
+    <div class="plat-pill">
+      <div class="plat-icon" style="background:#FF6B00">R</div>
+      Reco.se
+    </div>
+    <div class="plat-pill">
+      <div class="plat-icon" style="background:#1877F2">f</div>
+      Facebook
+    </div>
+    <div class="plat-pill">
+      <div class="plat-icon" style="background:#00B67A">T</div>
+      Trustpilot
+    </div>
+    <div class="plat-pill" style="opacity:.5;">
+      <div class="plat-icon" style="background:#C0C0C0">+</div>
+      More soon
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FEATURES ═══════════════════════════════════════ -->
+<section class="features">
+  <div class="section-label">What Samla does</div>
+  <h2 class="section-title">Three things. Done perfectly.</h2>
+
+  <div class="feature-grid">
+    <div class="feat-card">
+      <div class="feat-icon" style="background:#D4EAD9;">📥</div>
+      <div class="feat-title">One unified inbox</div>
+      <p class="feat-body">Every review from Google, Reco.se, Facebook and Trustpilot in one scrollable feed. Filter by platform, star rating, or "needs reply." No more tab-switching.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:#EEF2FF;">✦</div>
+      <div class="feat-title">AI reply drafts</div>
+      <p class="feat-body">Click any review and get a professional reply in seconds — in Swedish or English, matching your business tone. Edit, copy, done. Responding to a 1-star review takes 30 seconds.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:var(--gold-l);">📊</div>
+      <div class="feat-title">Monday morning digest</div>
+      <p class="feat-body">Every Monday at 08:00 you get an email: new reviews, average rating trend, and the 2 reviews that need your attention most. Stay on top of your reputation in 90 seconds a week.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ════════════════════════════════════ -->
+<section class="how">
+  <div class="how-inner">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title" style="color:var(--cream)">Set up in 5 minutes.</h2>
+
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-title">Connect your profiles</div>
+        <p class="step-body">Log in with Google and connect your Business Profile in one click. Add Facebook, Reco.se, and Trustpilot in under 5 minutes. No technical setup needed.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-title">See everything at once</div>
+        <p class="step-body">Your last 30 days of reviews appear instantly in one feed. You'll probably see a review you never knew existed.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-title">Reply in 30 seconds</div>
+        <p class="step-body">Click any review, get an AI-drafted reply, make any edits you want, and copy to the platform. We'll add one-click publish to Google in the Growth plan.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ═════════════════════════════════════════ -->
+<section class="pricing">
+  <div class="section-label">Pricing</div>
+  <h2 class="section-title">Straightforward.<br>No surprises.</h2>
+
+  <div class="pricing-grid">
+    <!-- Free -->
+    <div class="price-card">
+      <span class="price-tag free">Free forever</span>
+      <div class="price-name">Starter</div>
+      <div class="price-amount">0 <span style="font-size:16px">SEK</span></div>
+      <div class="price-period">no credit card needed</div>
+      <ul class="price-features">
+        <li>Google Reviews only</li>
+        <li>Last 10 reviews</li>
+        <li>1 platform</li>
+        <li class="muted" style="opacity:.4;">No AI replies</li>
+        <li class="muted" style="opacity:.4;">No weekly digest</li>
+      </ul>
+      <button class="price-cta" onclick="document.getElementById('hero-email').focus(); window.scrollTo({top:0,behavior:'smooth'})">
+        Start free
+      </button>
+    </div>
+
+    <!-- Pro -->
+    <div class="price-card featured">
+      <span class="price-tag popular">Most popular</span>
+      <div class="price-name">Pro</div>
+      <div class="price-amount">199 <span style="font-size:16px">SEK</span></div>
+      <div class="price-period">per month · 14-day free trial</div>
+      <ul class="price-features">
+        <li>Google + Reco.se + Facebook + Trustpilot</li>
+        <li>Unlimited reviews</li>
+        <li>AI reply drafts (Swedish + English)</li>
+        <li>Weekly Monday email digest</li>
+        <li>Sentiment trend chart</li>
+        <li>Reply rate tracker</li>
+      </ul>
+      <button class="price-cta" onclick="document.getElementById('hero-email').focus(); window.scrollTo({top:0,behavior:'smooth'})">
+        Start free trial
+      </button>
+    </div>
+
+    <!-- Growth -->
+    <div class="price-card">
+      <span class="price-tag growth">Coming soon</span>
+      <div class="price-name">Growth</div>
+      <div class="price-amount">399 <span style="font-size:16px">SEK</span></div>
+      <div class="price-period">per month</div>
+      <ul class="price-features">
+        <li>Everything in Pro</li>
+        <li>Review request campaigns</li>
+        <li>Competitor rating tracker</li>
+        <li>One-click Google reply</li>
+        <li>Monthly PDF report</li>
+        <li>Priority support</li>
+      </ul>
+      <button class="price-cta" onclick="document.getElementById('hero-email').focus(); window.scrollTo({top:0,behavior:'smooth'})">
+        Join waitlist
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BOTTOM CTA ══════════════════════════════════════ -->
+<section class="bottom-cta">
+  <h2>Stop losing track of what<br>customers are saying.</h2>
+  <p>Join 47 business owners already on the waitlist. Free during beta.</p>
+
+  <div class="bottom-form">
+    <input
+      type="email"
+      id="bottom-email"
+      placeholder="your@email.com"
+      autocomplete="email"
+    />
+    <button id="bottom-btn" onclick="handleSignup('bottom')">Get early access →</button>
+  </div>
+  <div class="form-success" id="bottom-success" style="max-width:400px;margin:12px auto 0;display:none;">
+    ✓ You're on the list! We'll be in touch.
+  </div>
+  <div class="form-error" id="bottom-error" style="max-width:400px;margin:10px auto 0;"></div>
+
+  <div class="gdpr-badge" style="justify-content:center;margin-top:12px;">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1.5" y="5" width="9" height="6.5" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3.5 5V3.5a2.5 2.5 0 015 0V5" stroke="currentColor" stroke-width="1"/></svg>
+    Your email is safe. No spam, GDPR-compliant, unsubscribe anytime.
+  </div>
+</section>
+
+<!-- ═══ FOOTER ══════════════════════════════════════════ -->
+<footer>
+  <div class="footer-logo">
+    <div class="logo-dot" style="animation:none;width:7px;height:7px;"></div>
+    Samla
+  </div>
+  <div class="footer-links">
+    <a href="#">Privacy policy</a>
+    <a href="#">Terms</a>
+    <a href="mailto:hello@samla.app">Contact</a>
+  </div>
+  <div class="footer-copy">
+    © 2026 Samla · Made in Sweden 🇸🇪 · All data stored on EU servers · GDPR compliant
+  </div>
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ SUPABASE LOGIC ══════════════════════════════════ -->
+<script>
+
+  const SUPABASE_URL      = 'https://hcekfpzegaulkdpngzni.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjZWtmcHplZ2F1bGtkcG5nem5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTQ5MTEsImV4cCI6MjA5MDQzMDkxMX0.4cvVkCgOy3A7kju6gUISCoF7aiMFB56P3XciUrVOn-Y';
+  // ─────────────────────────────────────────────────
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function showToast(msg, duration = 3500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  }
+
+  async function handleSignup(section) {
+    const emailEl  = document.getElementById(section + '-email');
+    const btnEl    = document.getElementById(section + '-btn');
+    const successEl = document.getElementById(section + '-success');
+    const errorEl  = document.getElementById(section + '-error');
+
+    const email = emailEl.value.trim();
+    errorEl.style.display = 'none';
+
+    if (!email) {
+      errorEl.textContent = 'Please enter your email address.';
+      errorEl.style.display = 'block';
+      emailEl.focus();
+      return;
+    }
+    if (!isValidEmail(email)) {
+      errorEl.textContent = 'That email doesn\'t look quite right — please double-check.';
+      errorEl.style.display = 'block';
+      emailEl.focus();
+      return;
+    }
+
+    // Disable button while submitting
+    btnEl.disabled = true;
+    btnEl.textContent = 'Joining…';
+
+    try {
+      const { error } = await supabaseClient
+        .from('waitlist')
+        .insert([{ email, source: section, created_at: new Date().toISOString() }]);
+
+      if (error) {
+        if (error.code === '23505') {
+          // Duplicate email — handle gracefully
+          if (section === 'hero') {
+            document.getElementById('hero-form-wrap').style.display = 'none';
+          }
+          successEl.textContent = '✓ You\'re already on the list — we\'ll be in touch soon!';
+          successEl.style.display = 'block';
+          showToast("You're already on the list ✓");
+        } else {
+          throw error;
+        }
+      } else {
+        // Success
+        if (section === 'hero') {
+          document.getElementById('hero-form-wrap').style.display = 'none';
+        }
+        successEl.style.display = 'block';
+        emailEl.value = '';
+        showToast('You\'re on the list! 🎉');
+
+        // Optional: fire a simple analytics event
+        if (window.plausible) {
+          window.plausible('Waitlist Signup', { props: { section } });
+        }
+      }
+    } catch (err) {
+      console.error('Supabase error:', err);
+      errorEl.textContent = 'Something went wrong — please try again or email us at hello@samla.app';
+      errorEl.style.display = 'block';
+      btnEl.disabled = false;
+      btnEl.textContent = section === 'hero' ? 'Join the waitlist →' : 'Get early access →';
+    }
+  }
+
+  // Allow Enter key to submit
+  document.getElementById('hero-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSignup('hero');
+  });
+  document.getElementById('bottom-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSignup('bottom');
+  });
+</script>
+
+</body>
+</html>
